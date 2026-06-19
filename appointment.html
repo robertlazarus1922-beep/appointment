@@ -1,0 +1,766 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>BookEase – Appointment Booking System</title>
+<style>
+  *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+  :root{
+    --primary:#2563EB;--primary-dark:#1D4ED8;--primary-light:#EFF6FF;
+    --success:#10B981;--warning:#F59E0B;--danger:#EF4444;
+    --text:#1E293B;--muted:#64748B;--border:#E2E8F0;
+    --bg:#F8FAFC;--white:#fff;
+    --shadow:0 1px 3px rgba(0,0,0,.1);--shadow-lg:0 10px 25px rgba(0,0,0,.1);
+    --radius:12px;--radius-sm:8px;
+  }
+  body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:var(--bg);color:var(--text);font-size:15px;line-height:1.6}
+  nav{background:var(--white);border-bottom:1px solid var(--border);box-shadow:var(--shadow);position:sticky;top:0;z-index:100}
+  .nav-inner{max-width:1100px;margin:0 auto;padding:0 20px;display:flex;align-items:center;justify-content:space-between;height:60px}
+  .brand{font-size:20px;font-weight:700;color:var(--primary);cursor:pointer}
+  .nav-tabs{display:flex;gap:4px}
+  .nav-tab{padding:7px 16px;border-radius:var(--radius-sm);font-size:14px;font-weight:500;cursor:pointer;color:var(--muted);border:none;background:none;transition:.2s}
+  .nav-tab:hover,.nav-tab.active{color:var(--primary);background:var(--primary-light)}
+  .nav-right{display:flex;align-items:center;gap:10px}
+  .avatar{width:34px;height:34px;border-radius:50%;background:var(--primary);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:14px;cursor:pointer}
+  .page{display:none;max-width:1100px;margin:0 auto;padding:30px 20px}
+  .page.active{display:block}
+  .hero{background:linear-gradient(135deg,#1e40af 0%,#2563eb 50%,#0ea5e9 100%);color:#fff;border-radius:var(--radius);padding:56px 40px;text-align:center;margin-bottom:36px}
+  .hero h1{font-size:40px;font-weight:800;margin-bottom:12px}
+  .hero p{font-size:17px;opacity:.9;max-width:560px;margin:0 auto 28px}
+  .hero-btns{display:flex;gap:12px;justify-content:center;flex-wrap:wrap}
+  .hero-stats{display:flex;gap:32px;justify-content:center;margin-top:36px;flex-wrap:wrap}
+  .hero-stat span:first-child{display:block;font-size:26px;font-weight:800}
+  .hero-stat span:last-child{font-size:13px;opacity:.8}
+  .btn{display:inline-flex;align-items:center;gap:6px;padding:10px 20px;border-radius:var(--radius-sm);font-size:14px;font-weight:600;cursor:pointer;border:none;transition:.2s;text-decoration:none}
+  .btn-primary{background:var(--primary);color:#fff}
+  .btn-primary:hover{background:var(--primary-dark)}
+  .btn-white{background:#fff;color:var(--primary)}
+  .btn-white:hover{background:#f0f4ff}
+  .btn-outline{background:transparent;color:var(--primary);border:2px solid var(--primary)}
+  .btn-outline:hover{background:var(--primary-light)}
+  .btn-danger{background:var(--danger);color:#fff}
+  .btn-success{background:var(--success);color:#fff}
+  .btn-sm{padding:6px 14px;font-size:13px}
+  .btn-lg{padding:13px 28px;font-size:16px}
+  .btn:disabled{opacity:.55;cursor:not-allowed}
+  .card{background:var(--white);border-radius:var(--radius);border:1px solid var(--border);box-shadow:var(--shadow);overflow:hidden}
+  .card-header{padding:18px 22px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between}
+  .card-body{padding:22px}
+  .grid{display:grid;gap:20px}
+  .g2{grid-template-columns:repeat(2,1fr)}
+  .g3{grid-template-columns:repeat(3,1fr)}
+  .g4{grid-template-columns:repeat(4,1fr)}
+  .form-group{margin-bottom:18px}
+  .form-group label{display:block;font-size:12px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px}
+  .form-group input,.form-group select,.form-group textarea{width:100%;padding:10px 14px;border:1.5px solid var(--border);border-radius:var(--radius-sm);font-size:15px;color:var(--text);background:#fff;transition:.2s}
+  .form-group input:focus,.form-group select:focus,.form-group textarea:focus{outline:none;border-color:var(--primary);box-shadow:0 0 0 3px rgba(37,99,235,.1)}
+  .form-group textarea{resize:vertical;min-height:90px}
+  .badge{display:inline-flex;padding:3px 10px;border-radius:20px;font-size:12px;font-weight:600;text-transform:capitalize}
+  .badge-pending{background:#fef3c7;color:#92400e}
+  .badge-confirmed{background:#dbeafe;color:#1e40af}
+  .badge-completed{background:#d1fae5;color:#065f46}
+  .badge-cancelled{background:#fee2e2;color:#991b1b}
+  .badge-cat{background:#ede9fe;color:#5b21b6}
+  .svc-card{cursor:pointer;transition:.2s}
+  .svc-card:hover{transform:translateY(-2px);box-shadow:var(--shadow-lg)}
+  .svc-icon{width:52px;height:52px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:24px;margin-bottom:14px}
+  .svc-title{font-size:16px;font-weight:700;margin-bottom:6px}
+  .svc-desc{font-size:13px;color:var(--muted);margin-bottom:14px;line-height:1.5}
+  .svc-meta{display:flex;align-items:center;justify-content:space-between}
+  .svc-price{font-size:18px;font-weight:700;color:var(--primary)}
+  .stat-card{background:var(--white);border-radius:var(--radius);border:1px solid var(--border);padding:22px}
+  .stat-icon{font-size:28px;margin-bottom:10px}
+  .stat-num{font-size:32px;font-weight:800;color:var(--text)}
+  .stat-lbl{font-size:13px;color:var(--muted);margin-top:2px}
+  table{width:100%;border-collapse:collapse}
+  th,td{padding:13px 16px;text-align:left;border-bottom:1px solid var(--border);font-size:14px}
+  th{font-size:12px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.4px;background:#f8fafc}
+  tr:last-child td{border-bottom:none}
+  tr:hover td{background:#fafbfc}
+  .modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:999;align-items:center;justify-content:center;padding:20px}
+  .modal-overlay.open{display:flex}
+  .modal{background:var(--white);border-radius:var(--radius);width:100%;max-width:480px;max-height:90vh;overflow-y:auto;box-shadow:var(--shadow-lg)}
+  .modal-header{padding:20px 24px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between}
+  .modal-header h3{font-size:18px;font-weight:700}
+  .modal-close{background:none;border:none;font-size:20px;cursor:pointer;color:var(--muted);padding:4px 8px;border-radius:4px}
+  .modal-close:hover{background:var(--bg)}
+  .modal-body{padding:24px}
+  .modal-footer{padding:16px 24px;border-top:1px solid var(--border);display:flex;gap:10px;justify-content:flex-end}
+  .slots-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:10px}
+  .slot-btn{padding:9px 4px;border:1.5px solid var(--border);border-radius:var(--radius-sm);font-size:13px;cursor:pointer;background:#fff;transition:.2s;text-align:center}
+  .slot-btn:hover{border-color:var(--primary);color:var(--primary)}
+  .slot-btn.selected{background:var(--primary);color:#fff;border-color:var(--primary)}
+  .slot-btn.booked{background:#f1f5f9;color:#cbd5e1;cursor:not-allowed}
+  #toast{position:fixed;bottom:24px;right:24px;z-index:9999;display:flex;flex-direction:column;gap:8px}
+  .toast-msg{padding:12px 20px;border-radius:var(--radius-sm);font-size:14px;font-weight:500;color:#fff;box-shadow:var(--shadow-lg);animation:slideIn .3s ease;max-width:320px}
+  .toast-success{background:#059669}
+  .toast-error{background:var(--danger)}
+  .toast-info{background:var(--primary)}
+  @keyframes slideIn{from{transform:translateX(100%);opacity:0}to{transform:translateX(0);opacity:1}}
+  .filter-bar{display:flex;gap:10px;margin-bottom:24px;flex-wrap:wrap}
+  .filter-btn{padding:7px 16px;border-radius:20px;border:1.5px solid var(--border);background:#fff;font-size:13px;font-weight:500;cursor:pointer;color:var(--muted);transition:.2s}
+  .filter-btn.active{background:var(--primary);color:#fff;border-color:var(--primary)}
+  .divider{text-align:center;color:var(--muted);font-size:13px;margin:18px 0;position:relative}
+  .divider::before{content:'';position:absolute;top:50%;left:0;right:0;height:1px;background:var(--border)}
+  .divider span{background:#fff;padding:0 12px;position:relative}
+  .empty{text-align:center;padding:60px 20px;color:var(--muted)}
+  .empty .icon{font-size:48px;margin-bottom:14px}
+  .empty h3{font-size:18px;color:var(--text);margin-bottom:6px}
+  .search-box{position:relative;flex:1;min-width:200px}
+  .search-box input{padding-left:40px}
+  .search-icon{position:absolute;left:13px;top:50%;transform:translateY(-50%);color:var(--muted);font-size:16px}
+  .role-tag{display:inline-flex;padding:2px 10px;border-radius:12px;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.5px}
+  .role-customer{background:#e0f2fe;color:#0c4a6e}
+  .role-provider{background:#d1fae5;color:#065f46}
+  .cat-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-top:10px}
+  .cat-card{border-radius:var(--radius);padding:20px;display:flex;align-items:center;gap:14px;cursor:pointer;border:1px solid transparent;transition:.2s}
+  .cat-card:hover{border-color:var(--primary);transform:translateY(-2px)}
+  .cat-card .icon{font-size:28px}
+  .cat-card .name{font-weight:600;font-size:15px}
+  .section-title{font-size:22px;font-weight:800;margin-bottom:4px}
+  .section-sub{color:var(--muted);margin-bottom:22px;font-size:14px}
+  .appt-row{display:flex;align-items:center;gap:12px;padding:14px 0;border-bottom:1px solid var(--border)}
+  .appt-row:last-child{border-bottom:none}
+  .appt-icon{width:42px;height:42px;border-radius:10px;background:var(--primary-light);display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0}
+  .appt-info{flex:1}
+  .appt-name{font-weight:600;font-size:14px}
+  .appt-meta{font-size:12px;color:var(--muted);margin-top:2px}
+  .profile-avatar{width:80px;height:80px;border-radius:50%;background:var(--primary);color:#fff;display:flex;align-items:center;justify-content:center;font-size:32px;font-weight:700;margin-bottom:16px}
+  @media(max-width:680px){
+    .g2,.g3,.g4{grid-template-columns:1fr}
+    .cat-grid{grid-template-columns:repeat(2,1fr)}
+    .hero{padding:36px 20px}
+    .hero h1{font-size:28px}
+    .slots-grid{grid-template-columns:repeat(3,1fr)}
+    table{font-size:13px}
+    th,td{padding:10px 10px}
+  }
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="nav-inner">
+    <div class="brand" onclick="showPage('home')">📅 BookEase</div>
+    <div class="nav-tabs">
+      <button class="nav-tab active" onclick="showPage('home')">Home</button>
+      <button class="nav-tab" onclick="showPage('services')">Services</button>
+      <button class="nav-tab" id="dash-tab" style="display:none" onclick="showPage('dashboard')">Dashboard</button>
+      <button class="nav-tab" id="appt-tab" style="display:none" onclick="showPage('appointments')">Appointments</button>
+    </div>
+    <div class="nav-right" id="nav-right">
+      <button class="btn btn-outline btn-sm" onclick="openModal('login-modal')">Login</button>
+      <button class="btn btn-primary btn-sm" onclick="openModal('register-modal')">Sign Up</button>
+    </div>
+  </div>
+</nav>
+
+<div id="toast"></div>
+
+<!-- HOME -->
+<div class="page active" id="page-home">
+  <div class="hero">
+    <div style="margin-bottom:10px"><span style="background:rgba(255,255,255,.2);padding:5px 16px;border-radius:20px;font-size:13px;font-weight:600">🚀 RISE Internship — Full Stack MERN Project</span></div>
+    <h1>Book Appointments<br>Smarter & Faster</h1>
+    <p>A complete appointment booking platform for clinics, salons, consultants and more — with real-time availability and conflict prevention.</p>
+    <div class="hero-btns">
+      <button class="btn btn-white btn-lg" onclick="showPage('services')">Browse Services</button>
+      <button class="btn btn-lg" style="background:rgba(255,255,255,.15);color:#fff;border:2px solid rgba(255,255,255,.4)" onclick="openModal('register-modal')">Get Started Free</button>
+    </div>
+    <div class="hero-stats">
+      <div class="hero-stat"><span>MERN</span><span>Stack</span></div>
+      <div class="hero-stat"><span>JWT</span><span>Auth</span></div>
+      <div class="hero-stat"><span>REST</span><span>APIs</span></div>
+      <div class="hero-stat"><span>6+</span><span>Categories</span></div>
+    </div>
+  </div>
+  <div style="margin-bottom:36px">
+    <div class="section-title">Service Categories</div>
+    <div class="section-sub">Find the right professional for every need</div>
+    <div class="cat-grid">
+      <div class="cat-card" style="background:#ede9fe" onclick="filterAndGoServices('healthcare')"><span class="icon">🏥</span><span class="name">Healthcare</span></div>
+      <div class="cat-card" style="background:#fce7f3" onclick="filterAndGoServices('salon')"><span class="icon">💇</span><span class="name">Salon</span></div>
+      <div class="cat-card" style="background:#e0f2fe" onclick="filterAndGoServices('consulting')"><span class="icon">💼</span><span class="name">Consulting</span></div>
+      <div class="cat-card" style="background:#d1fae5" onclick="filterAndGoServices('fitness')"><span class="icon">🏋️</span><span class="name">Fitness</span></div>
+      <div class="cat-card" style="background:#fef9c3" onclick="filterAndGoServices('education')"><span class="icon">📚</span><span class="name">Education</span></div>
+      <div class="cat-card" style="background:#f1f5f9" onclick="filterAndGoServices('other')"><span class="icon">🎯</span><span class="name">Other</span></div>
+    </div>
+  </div>
+  <div class="section-title">Why BookEase?</div>
+  <div class="section-sub">Built for real-world scheduling needs</div>
+  <div class="grid g3">
+    <div class="card"><div class="card-body"><div style="font-size:28px;margin-bottom:10px">🔐</div><div style="font-weight:700;margin-bottom:6px">Secure Auth</div><div style="font-size:13px;color:var(--muted)">JWT-based authentication for customers and service providers with role-based access control.</div></div></div>
+    <div class="card"><div class="card-body"><div style="font-size:28px;margin-bottom:10px">📅</div><div style="font-weight:700;margin-bottom:6px">Smart Scheduling</div><div style="font-size:13px;color:var(--muted)">Real-time availability checks with automatic conflict detection and prevention.</div></div></div>
+    <div class="card"><div class="card-body"><div style="font-size:28px;margin-bottom:10px">🔔</div><div style="font-weight:700;margin-bottom:6px">Status Tracking</div><div style="font-size:13px;color:var(--muted)">Full appointment lifecycle — pending, confirmed, completed, and cancelled.</div></div></div>
+    <div class="card"><div class="card-body"><div style="font-size:28px;margin-bottom:10px">⚡</div><div style="font-weight:700;margin-bottom:6px">REST APIs</div><div style="font-size:13px;color:var(--muted)">Full Express + MongoDB backend with validation, pagination, and error handling.</div></div></div>
+    <div class="card"><div class="card-body"><div style="font-size:28px;margin-bottom:10px">📋</div><div style="font-weight:700;margin-bottom:6px">Service Management</div><div style="font-size:13px;color:var(--muted)">Providers can create and manage services with duration, pricing and availability slots.</div></div></div>
+    <div class="card"><div class="card-body"><div style="font-size:28px;margin-bottom:10px">📱</div><div style="font-weight:700;margin-bottom:6px">Responsive UI</div><div style="font-size:13px;color:var(--muted)">Mobile-first design that works seamlessly on all screen sizes.</div></div></div>
+  </div>
+</div>
+
+<!-- SERVICES -->
+<div class="page" id="page-services">
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:24px;flex-wrap:wrap;gap:12px">
+    <div>
+      <div class="section-title">All Services</div>
+      <div style="color:var(--muted);font-size:14px">Browse and book appointments</div>
+    </div>
+    <div class="search-box" style="max-width:260px">
+      <span class="search-icon">🔍</span>
+      <input type="text" placeholder="Search services…" oninput="filterServices()" id="svc-search" style="width:260px"/>
+    </div>
+  </div>
+  <div class="filter-bar">
+    <button class="filter-btn active" onclick="setCatFilter(this,'all')">All</button>
+    <button class="filter-btn" onclick="setCatFilter(this,'healthcare')">🏥 Healthcare</button>
+    <button class="filter-btn" onclick="setCatFilter(this,'salon')">💇 Salon</button>
+    <button class="filter-btn" onclick="setCatFilter(this,'consulting')">💼 Consulting</button>
+    <button class="filter-btn" onclick="setCatFilter(this,'fitness')">🏋️ Fitness</button>
+    <button class="filter-btn" onclick="setCatFilter(this,'education')">📚 Education</button>
+    <button class="filter-btn" onclick="setCatFilter(this,'other')">🎯 Other</button>
+  </div>
+  <div class="grid g3" id="services-list"></div>
+</div>
+
+<!-- DASHBOARD -->
+<div class="page" id="page-dashboard">
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:28px;flex-wrap:wrap;gap:12px">
+    <div>
+      <div class="section-title">Dashboard</div>
+      <div id="dash-greet" style="color:var(--muted);font-size:14px">Welcome back!</div>
+    </div>
+    <div style="display:flex;gap:10px;flex-wrap:wrap">
+      <button class="btn btn-outline btn-sm" onclick="openModal('profile-modal')">👤 Profile</button>
+      <button class="btn btn-danger btn-sm" onclick="logout()">Logout</button>
+    </div>
+  </div>
+  <div class="grid g4" id="dash-stats" style="margin-bottom:28px"></div>
+  <div id="dash-upcoming"></div>
+</div>
+
+<!-- APPOINTMENTS -->
+<div class="page" id="page-appointments">
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;flex-wrap:wrap;gap:12px">
+    <div class="section-title">My Appointments</div>
+    <button class="btn btn-primary btn-sm" onclick="showPage('services')">+ Book New</button>
+  </div>
+  <div class="filter-bar">
+    <button class="filter-btn active" onclick="setApptFilter(this,'all')">All</button>
+    <button class="filter-btn" onclick="setApptFilter(this,'pending')">Pending</button>
+    <button class="filter-btn" onclick="setApptFilter(this,'confirmed')">Confirmed</button>
+    <button class="filter-btn" onclick="setApptFilter(this,'completed')">Completed</button>
+    <button class="filter-btn" onclick="setApptFilter(this,'cancelled')">Cancelled</button>
+  </div>
+  <div class="card"><div class="card-body" style="padding:0"><div id="appts-table-wrap"></div></div></div>
+</div>
+
+<!-- LOGIN MODAL -->
+<div class="modal-overlay" id="login-modal">
+  <div class="modal">
+    <div class="modal-header"><h3>Sign In</h3><button class="modal-close" onclick="closeModal('login-modal')">✕</button></div>
+    <div class="modal-body">
+      <div class="form-group"><label>Email</label><input type="email" id="login-email" placeholder="you@email.com"/></div>
+      <div class="form-group"><label>Password</label><input type="password" id="login-pass" placeholder="••••••••"/></div>
+      <button class="btn btn-primary" style="width:100%" onclick="login()">Sign In</button>
+      <div class="divider"><span>or</span></div>
+      <div style="text-align:center;font-size:14px;color:var(--muted)">No account? <a href="#" onclick="switchModal('login-modal','register-modal')" style="color:var(--primary)">Sign up</a></div>
+      <div style="margin-top:16px;padding:12px;background:#f8fafc;border-radius:var(--radius-sm);font-size:12px;color:var(--muted)">
+        <strong>Demo accounts:</strong><br>
+        Customer: customer@demo.com / pass123<br>
+        Provider: provider@demo.com / pass123
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- REGISTER MODAL -->
+<div class="modal-overlay" id="register-modal">
+  <div class="modal">
+    <div class="modal-header"><h3>Create Account</h3><button class="modal-close" onclick="closeModal('register-modal')">✕</button></div>
+    <div class="modal-body">
+      <div class="form-group"><label>Full Name</label><input type="text" id="reg-name" placeholder="Your Name"/></div>
+      <div class="form-group"><label>Email</label><input type="email" id="reg-email" placeholder="you@email.com"/></div>
+      <div class="form-group"><label>Phone (optional)</label><input type="tel" id="reg-phone" placeholder="+91 98765 43210"/></div>
+      <div class="form-group"><label>Password</label><input type="password" id="reg-pass" placeholder="Min 6 characters"/></div>
+      <div class="form-group">
+        <label>Register as</label>
+        <select id="reg-role">
+          <option value="customer">Customer – Book appointments</option>
+          <option value="provider">Service Provider – Offer services</option>
+        </select>
+      </div>
+      <button class="btn btn-primary" style="width:100%" onclick="register()">Create Account</button>
+      <div class="divider"><span>or</span></div>
+      <div style="text-align:center;font-size:14px;color:var(--muted)">Have an account? <a href="#" onclick="switchModal('register-modal','login-modal')" style="color:var(--primary)">Sign in</a></div>
+    </div>
+  </div>
+</div>
+
+<!-- BOOK MODAL -->
+<div class="modal-overlay" id="book-modal">
+  <div class="modal">
+    <div class="modal-header"><h3>Book Appointment</h3><button class="modal-close" onclick="closeModal('book-modal')">✕</button></div>
+    <div class="modal-body">
+      <div id="book-svc-info" style="margin-bottom:20px;padding:14px;background:#eff6ff;border-radius:var(--radius-sm)"></div>
+      <div class="form-group"><label>Date</label><input type="date" id="book-date" onchange="loadSlots()"/></div>
+      <div id="slots-section" style="display:none">
+        <label style="font-size:12px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.5px">Available Slots</label>
+        <div class="slots-grid" id="slots-grid"></div>
+      </div>
+      <div id="no-slots" style="display:none;padding:16px;text-align:center;color:var(--muted);font-size:14px">No slots available on this day.</div>
+      <div class="form-group" style="margin-top:16px"><label>Notes (optional)</label><textarea id="book-notes" placeholder="Any special requirements…"></textarea></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="closeModal('book-modal')">Cancel</button>
+      <button class="btn btn-primary" onclick="confirmBooking()" id="confirm-book-btn" disabled>Confirm Booking</button>
+    </div>
+  </div>
+</div>
+
+<!-- CANCEL MODAL -->
+<div class="modal-overlay" id="cancel-modal">
+  <div class="modal">
+    <div class="modal-header"><h3>Cancel Appointment</h3><button class="modal-close" onclick="closeModal('cancel-modal')">✕</button></div>
+    <div class="modal-body">
+      <p style="color:var(--muted);margin-bottom:16px">Are you sure you want to cancel this appointment?</p>
+      <div class="form-group"><label>Reason (optional)</label><textarea id="cancel-reason" placeholder="Why are you cancelling?"></textarea></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="closeModal('cancel-modal')">Keep it</button>
+      <button class="btn btn-danger" onclick="confirmCancel()">Yes, Cancel</button>
+    </div>
+  </div>
+</div>
+
+<!-- PROFILE MODAL -->
+<div class="modal-overlay" id="profile-modal">
+  <div class="modal">
+    <div class="modal-header"><h3>My Profile</h3><button class="modal-close" onclick="closeModal('profile-modal')">✕</button></div>
+    <div class="modal-body" id="profile-body"></div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="closeModal('profile-modal')">Close</button>
+      <button class="btn btn-primary" onclick="saveProfile()">Save Changes</button>
+    </div>
+  </div>
+</div>
+
+<!-- ADD SERVICE MODAL -->
+<div class="modal-overlay" id="add-svc-modal">
+  <div class="modal">
+    <div class="modal-header"><h3>Add New Service</h3><button class="modal-close" onclick="closeModal('add-svc-modal')">✕</button></div>
+    <div class="modal-body">
+      <div class="form-group"><label>Service Name</label><input type="text" id="ns-name" placeholder="e.g. General Consultation"/></div>
+      <div class="form-group"><label>Description</label><textarea id="ns-desc" placeholder="Describe the service…"></textarea></div>
+      <div class="grid g2">
+        <div class="form-group"><label>Category</label>
+          <select id="ns-cat">
+            <option value="healthcare">Healthcare</option>
+            <option value="salon">Salon</option>
+            <option value="consulting">Consulting</option>
+            <option value="fitness">Fitness</option>
+            <option value="education">Education</option>
+            <option value="other">Other</option>
+          </select>
+        </div>
+        <div class="form-group"><label>Duration (min)</label><input type="number" id="ns-dur" value="60" min="15" step="15"/></div>
+      </div>
+      <div class="form-group"><label>Price (₹)</label><input type="number" id="ns-price" placeholder="500" min="0"/></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="closeModal('add-svc-modal')">Cancel</button>
+      <button class="btn btn-primary" onclick="addService()">Add Service</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const STORE = {
+  currentUser: null,
+  activeApptFilter: 'all',
+  activeCatFilter: 'all',
+  selectedSlot: null,
+  cancelTargetId: null,
+  bookingServiceId: null,
+  users: [
+    {id:'u1',name:'Demo Customer',email:'customer@demo.com',phone:'+91 98765 43210',password:'pass123',role:'customer'},
+    {id:'u2',name:'Dr. Priya Sharma',email:'provider@demo.com',phone:'+91 99887 76655',password:'pass123',role:'provider'},
+    {id:'u3',name:'Rahul Fitness',email:'rahul@demo.com',phone:'+91 90001 12233',password:'pass123',role:'provider'},
+  ],
+  services: [
+    {id:'s1',name:'General Consultation',description:'Comprehensive medical consultation with an experienced physician. Covers routine checkups, prescriptions, and referrals.',category:'healthcare',duration:30,price:500,providerId:'u2',icon:'🩺',rating:4.8,bookings:124},
+    {id:'s2',name:'Hair Cut & Styling',description:'Full hair styling session including wash, cut, and finish. Suitable for all hair types.',category:'salon',duration:60,price:350,providerId:'u2',icon:'✂️',rating:4.6,bookings:89},
+    {id:'s3',name:'Business Strategy Consulting',description:'One-on-one business strategy session to improve operations, marketing, and growth planning.',category:'consulting',duration:90,price:2500,providerId:'u3',icon:'📊',rating:4.9,bookings:47},
+    {id:'s4',name:'Personal Training Session',description:'Custom workout session with a certified trainer. Covers strength, cardio, and flexibility.',category:'fitness',duration:60,price:800,providerId:'u3',icon:'🏋️',rating:4.7,bookings:63},
+    {id:'s5',name:'Python Programming Tutoring',description:'One-on-one Python tutoring covering basics to advanced topics including data structures and algorithms.',category:'education',duration:120,price:1200,providerId:'u2',icon:'🐍',rating:4.5,bookings:31},
+    {id:'s6',name:'Dental Checkup',description:'Complete dental examination including scaling, cleaning, and X-ray interpretation.',category:'healthcare',duration:45,price:700,providerId:'u3',icon:'🦷',rating:4.7,bookings:58},
+    {id:'s7',name:'Facial & Skin Care',description:'Deep cleansing facial with moisturizing treatment. Suitable for all skin types.',category:'salon',duration:75,price:900,providerId:'u3',icon:'✨',rating:4.4,bookings:42},
+    {id:'s8',name:'Tax Filing Assistance',description:'Complete income tax return filing with advice on deductions and compliance.',category:'other',duration:90,price:1500,providerId:'u2',icon:'📋',rating:4.6,bookings:29},
+  ],
+  appointments: [
+    {id:'a1',customerId:'u1',serviceId:'s1',providerId:'u2',date:'2026-06-25',slot:{start:'10:00',end:'10:30'},status:'confirmed',notes:'Follow-up visit',price:500,createdAt:'2026-06-15'},
+    {id:'a2',customerId:'u1',serviceId:'s4',providerId:'u3',date:'2026-06-28',slot:{start:'08:00',end:'09:00'},status:'pending',notes:'',price:800,createdAt:'2026-06-16'},
+    {id:'a3',customerId:'u1',serviceId:'s2',providerId:'u2',date:'2026-06-10',slot:{start:'14:00',end:'15:00'},status:'completed',notes:'',price:350,createdAt:'2026-06-05'},
+  ],
+  getService(id){ return this.services.find(s=>s.id===id) },
+  getUser(id){ return this.users.find(u=>u.id===id) },
+  getAppt(id){ return this.appointments.find(a=>a.id===id) },
+  filteredServices(){
+    return this.services.filter(s=>{
+      const q=document.getElementById('svc-search')?.value.toLowerCase()||'';
+      const catOk=this.activeCatFilter==='all'||s.category===this.activeCatFilter;
+      const qOk=!q||s.name.toLowerCase().includes(q)||s.description.toLowerCase().includes(q);
+      return catOk&&qOk;
+    });
+  },
+  filteredAppts(){
+    if(!this.currentUser) return [];
+    return this.appointments.filter(a=>{
+      const mine=this.currentUser.role==='customer'?a.customerId===this.currentUser.id:a.providerId===this.currentUser.id;
+      const f=this.activeApptFilter;
+      return mine&&(f==='all'||a.status===f);
+    });
+  }
+};
+
+function uid(){ return 'x'+Math.random().toString(36).slice(2,9) }
+function fmt(date){ return new Date(date).toLocaleDateString('en-IN',{day:'2-digit',month:'short',year:'numeric'}) }
+function toast(msg,type='success'){
+  const el=document.createElement('div');
+  el.className=`toast-msg toast-${type}`;
+  el.textContent=msg;
+  document.getElementById('toast').appendChild(el);
+  setTimeout(()=>el.remove(),3500);
+}
+function catIcon(c){return{healthcare:'🏥',salon:'💇',consulting:'💼',fitness:'🏋️',education:'📚',other:'🎯'}[c]||'📌'}
+function catColor(c){return{healthcare:'#ede9fe',salon:'#fce7f3',consulting:'#e0f2fe',fitness:'#d1fae5',education:'#fef9c3',other:'#f1f5f9'}[c]||'#f1f5f9'}
+function statusBadge(s){return`<span class="badge badge-${s}">${s}</span>`}
+
+function openModal(id){
+  if(id==='profile-modal') openProfileModal();
+  document.getElementById(id).classList.add('open');
+}
+function closeModal(id){ document.getElementById(id).classList.remove('open') }
+function switchModal(from,to){ closeModal(from); openModal(to) }
+document.querySelectorAll('.modal-overlay').forEach(m=>{
+  m.addEventListener('click',e=>{ if(e.target===m) m.classList.remove('open') });
+});
+
+function showPage(page){
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.getElementById('page-'+page).classList.add('active');
+  document.querySelectorAll('.nav-tab').forEach(t=>t.classList.remove('active'));
+  const tabs=document.querySelectorAll('.nav-tab');
+  const tabMap={home:0,services:1,dashboard:2,appointments:3};
+  if(tabMap[page]!==undefined) tabs[tabMap[page]]?.classList.add('active');
+  if(page==='services') renderServices();
+  if(page==='dashboard') renderDashboard();
+  if(page==='appointments') renderAppointments();
+  window.scrollTo(0,0);
+}
+
+function login(){
+  const email=document.getElementById('login-email').value.trim();
+  const pass=document.getElementById('login-pass').value;
+  if(!email||!pass){ toast('Please fill all fields','error'); return; }
+  const user=STORE.users.find(u=>u.email===email&&u.password===pass);
+  if(!user){ toast('Invalid email or password','error'); return; }
+  setCurrentUser(user);
+  closeModal('login-modal');
+  toast(`Welcome back, ${user.name.split(' ')[0]}! 👋`);
+  showPage('dashboard');
+}
+
+function register(){
+  const name=document.getElementById('reg-name').value.trim();
+  const email=document.getElementById('reg-email').value.trim();
+  const phone=document.getElementById('reg-phone').value.trim();
+  const pass=document.getElementById('reg-pass').value;
+  const role=document.getElementById('reg-role').value;
+  if(!name||!email||!pass){ toast('Please fill required fields','error'); return; }
+  if(pass.length<6){ toast('Password must be at least 6 characters','error'); return; }
+  if(STORE.users.find(u=>u.email===email)){ toast('Email already registered','error'); return; }
+  const user={id:uid(),name,email,phone,password:pass,role};
+  STORE.users.push(user);
+  setCurrentUser(user);
+  closeModal('register-modal');
+  toast(`Account created! Welcome, ${name.split(' ')[0]}! 🎉`);
+  showPage('dashboard');
+}
+
+function logout(){
+  STORE.currentUser=null;
+  document.getElementById('nav-right').innerHTML=`
+    <button class="btn btn-outline btn-sm" onclick="openModal('login-modal')">Login</button>
+    <button class="btn btn-primary btn-sm" onclick="openModal('register-modal')">Sign Up</button>`;
+  document.getElementById('dash-tab').style.display='none';
+  document.getElementById('appt-tab').style.display='none';
+  showPage('home');
+  toast('Logged out successfully','info');
+}
+
+function setCurrentUser(user){
+  STORE.currentUser=user;
+  document.getElementById('nav-right').innerHTML=`
+    <span class="avatar" onclick="openModal('profile-modal')" title="${user.name}">${user.name.charAt(0).toUpperCase()}</span>
+    <button class="btn btn-outline btn-sm" onclick="logout()">Logout</button>`;
+  document.getElementById('dash-tab').style.display='';
+  document.getElementById('appt-tab').style.display='';
+}
+
+function filterAndGoServices(cat){
+  STORE.activeCatFilter=cat;
+  showPage('services');
+  document.querySelectorAll('.filter-btn').forEach(b=>{
+    b.classList.toggle('active',b.textContent.toLowerCase().includes(cat)||(cat==='all'&&b.textContent==='All'));
+  });
+}
+
+function setCatFilter(btn,cat){
+  STORE.activeCatFilter=cat;
+  document.querySelectorAll('.filter-btn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  renderServices();
+}
+
+function filterServices(){ renderServices() }
+
+function renderServices(){
+  const list=document.getElementById('services-list');
+  const svcs=STORE.filteredServices();
+  if(!svcs.length){
+    list.innerHTML=`<div class="empty" style="grid-column:1/-1"><div class="icon">🔍</div><h3>No services found</h3><p>Try a different search or category</p></div>`;
+    return;
+  }
+  list.innerHTML=svcs.map(s=>`
+    <div class="card svc-card" onclick="openBookModal('${s.id}')">
+      <div class="card-body">
+        <div class="svc-icon" style="background:${catColor(s.category)}">${s.icon}</div>
+        <div style="margin-bottom:6px"><span class="badge badge-cat">${catIcon(s.category)} ${s.category}</span></div>
+        <div class="svc-title">${s.name}</div>
+        <div class="svc-desc">${s.description}</div>
+        <div style="font-size:12px;color:var(--muted);margin-bottom:14px">⏱ ${s.duration} min &nbsp;·&nbsp; ⭐ ${s.rating} &nbsp;·&nbsp; ${s.bookings} bookings</div>
+        <div class="svc-meta">
+          <span class="svc-price">₹${s.price}</span>
+          <button class="btn btn-primary btn-sm">Book Now</button>
+        </div>
+      </div>
+    </div>`).join('');
+}
+
+function openBookModal(svcId){
+  if(!STORE.currentUser){ toast('Please log in to book an appointment','info'); openModal('login-modal'); return; }
+  STORE.bookingServiceId=svcId;
+  STORE.selectedSlot=null;
+  const svc=STORE.getService(svcId);
+  const provider=STORE.getUser(svc.providerId);
+  document.getElementById('book-svc-info').innerHTML=`
+    <div style="display:flex;gap:14px;align-items:flex-start">
+      <div style="font-size:32px">${svc.icon}</div>
+      <div>
+        <div style="font-weight:700;font-size:16px">${svc.name}</div>
+        <div style="font-size:13px;color:var(--muted)">by ${provider.name}</div>
+        <div style="margin-top:8px;display:flex;gap:16px;font-size:13px">
+          <span><strong>₹${svc.price}</strong></span>
+          <span>⏱ ${svc.duration} min</span>
+        </div>
+      </div>
+    </div>`;
+  const today=new Date().toISOString().split('T')[0];
+  document.getElementById('book-date').min=today;
+  document.getElementById('book-date').value='';
+  document.getElementById('slots-section').style.display='none';
+  document.getElementById('no-slots').style.display='none';
+  document.getElementById('confirm-book-btn').disabled=true;
+  document.getElementById('book-notes').value='';
+  openModal('book-modal');
+}
+
+function loadSlots(){
+  const date=document.getElementById('book-date').value;
+  if(!date) return;
+  const svc=STORE.getService(STORE.bookingServiceId);
+  const allSlots=[];
+  for(let h=8;h<18;){
+    const end=h+(svc.duration/60);
+    if(end<=18){
+      const startStr=`${String(h).padStart(2,'0')}:00`;
+      const endH=Math.floor(end);
+      const endM=Math.round((end%1)*60);
+      const endStr=`${String(endH).padStart(2,'0')}:${String(endM).padStart(2,'0')}`;
+      allSlots.push({start:startStr,end:endStr});
+    }
+    h+=svc.duration/60;
+  }
+  const booked=STORE.appointments.filter(a=>a.serviceId===svc.id&&a.date===date&&a.status!=='cancelled').map(a=>a.slot.start);
+  STORE.selectedSlot=null;
+  document.getElementById('confirm-book-btn').disabled=true;
+  if(!allSlots.length){
+    document.getElementById('slots-section').style.display='none';
+    document.getElementById('no-slots').style.display='block';
+    return;
+  }
+  document.getElementById('slots-section').style.display='block';
+  document.getElementById('no-slots').style.display='none';
+  document.getElementById('slots-grid').innerHTML=allSlots.map(sl=>{
+    const isBooked=booked.includes(sl.start);
+    return`<button class="slot-btn${isBooked?' booked':''}" onclick="${isBooked?'':'selectSlot(this,\''+sl.start+'\',\''+sl.end+'\')'}">${sl.start}</button>`;
+  }).join('');
+}
+
+function selectSlot(btn,start,end){
+  document.querySelectorAll('.slot-btn').forEach(b=>b.classList.remove('selected'));
+  btn.classList.add('selected');
+  STORE.selectedSlot={start,end};
+  document.getElementById('confirm-book-btn').disabled=false;
+}
+
+function confirmBooking(){
+  const date=document.getElementById('book-date').value;
+  if(!date){ toast('Please select a date','error'); return; }
+  if(!STORE.selectedSlot){ toast('Please select a time slot','error'); return; }
+  const svc=STORE.getService(STORE.bookingServiceId);
+  const conflict=STORE.appointments.find(a=>a.serviceId===svc.id&&a.date===date&&a.slot.start===STORE.selectedSlot.start&&a.status!=='cancelled');
+  if(conflict){ toast('This slot was just booked. Please choose another.','error'); loadSlots(); return; }
+  const appt={id:uid(),customerId:STORE.currentUser.id,serviceId:svc.id,providerId:svc.providerId,date,slot:STORE.selectedSlot,status:'pending',notes:document.getElementById('book-notes').value,price:svc.price,createdAt:new Date().toISOString().split('T')[0]};
+  STORE.appointments.push(appt);
+  svc.bookings++;
+  closeModal('book-modal');
+  toast(`Appointment booked for ${fmt(date)} at ${STORE.selectedSlot.start}! 🎉`);
+  showPage('appointments');
+}
+
+function setApptFilter(btn,f){
+  STORE.activeApptFilter=f;
+  document.querySelectorAll('.filter-btn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  renderAppointments();
+}
+
+function renderAppointments(){
+  if(!STORE.currentUser) return;
+  const appts=STORE.filteredAppts();
+  const wrap=document.getElementById('appts-table-wrap');
+  if(!appts.length){
+    wrap.innerHTML=`<div class="empty"><div class="icon">📭</div><h3>No appointments found</h3><p>Book a service to get started</p><button class="btn btn-primary" style="margin-top:16px" onclick="showPage('services')">Browse Services</button></div>`;
+    return;
+  }
+  wrap.innerHTML=`<table><thead><tr><th>Service</th><th>Date & Time</th><th>Price</th><th>Status</th><th>Action</th></tr></thead><tbody>${appts.map(a=>{
+    const svc=STORE.getService(a.serviceId);
+    const canCancel=['pending','confirmed'].includes(a.status);
+    return`<tr>
+      <td><div style="font-weight:600">${svc?.icon||'📌'} ${svc?.name||'Unknown'}</div><div style="font-size:12px;color:var(--muted)">${catIcon(svc?.category)} ${svc?.category||''}</div></td>
+      <td><div style="font-weight:500">${fmt(a.date)}</div><div style="font-size:12px;color:var(--muted)">${a.slot.start} – ${a.slot.end}</div></td>
+      <td style="font-weight:600">₹${a.price}</td>
+      <td>${statusBadge(a.status)}</td>
+      <td>${canCancel?`<button class="btn btn-danger btn-sm" onclick="openCancelModal('${a.id}')">Cancel</button>`:'—'}</td>
+    </tr>`;
+  }).join('')}</tbody></table>`;
+}
+
+function openCancelModal(id){
+  STORE.cancelTargetId=id;
+  document.getElementById('cancel-reason').value='';
+  openModal('cancel-modal');
+}
+
+function confirmCancel(){
+  const appt=STORE.getAppt(STORE.cancelTargetId);
+  if(appt){ appt.status='cancelled'; appt.cancellationReason=document.getElementById('cancel-reason').value; }
+  closeModal('cancel-modal');
+  toast('Appointment cancelled','info');
+  renderAppointments();
+}
+
+function renderDashboard(){
+  if(!STORE.currentUser) return;
+  const u=STORE.currentUser;
+  document.getElementById('dash-greet').textContent=`Welcome back, ${u.name.split(' ')[0]}! Logged in as ${u.role}.`;
+  const myAppts=STORE.appointments.filter(a=>u.role==='customer'?a.customerId===u.id:a.providerId===u.id);
+  const upcoming=myAppts.filter(a=>['pending','confirmed'].includes(a.status)&&new Date(a.date)>=new Date());
+  const completed=myAppts.filter(a=>a.status==='completed');
+  const cancelled=myAppts.filter(a=>a.status==='cancelled');
+  document.getElementById('dash-stats').innerHTML=`
+    <div class="stat-card"><div class="stat-icon">📅</div><div class="stat-num">${myAppts.length}</div><div class="stat-lbl">Total</div></div>
+    <div class="stat-card"><div class="stat-icon">⏳</div><div class="stat-num">${upcoming.length}</div><div class="stat-lbl">Upcoming</div></div>
+    <div class="stat-card"><div class="stat-icon">✅</div><div class="stat-num">${completed.length}</div><div class="stat-lbl">Completed</div></div>
+    <div class="stat-card"><div class="stat-icon">❌</div><div class="stat-num">${cancelled.length}</div><div class="stat-lbl">Cancelled</div></div>`;
+  const recentAppts=myAppts.slice(-5).reverse();
+  document.getElementById('dash-upcoming').innerHTML=`
+    <div class="card">
+      <div class="card-header"><span style="font-weight:700">Recent Appointments</span><button class="btn btn-outline btn-sm" onclick="showPage('appointments')">View All</button></div>
+      <div class="card-body">
+        ${recentAppts.length?recentAppts.map(a=>{
+          const svc=STORE.getService(a.serviceId);
+          return`<div class="appt-row">
+            <div class="appt-icon">${svc?.icon||'📌'}</div>
+            <div class="appt-info"><div class="appt-name">${svc?.name||'Unknown'}</div><div class="appt-meta">${fmt(a.date)} · ${a.slot.start} · ₹${a.price}</div></div>
+            ${statusBadge(a.status)}
+          </div>`;
+        }).join(''):`<div class="empty" style="padding:30px 0"><div class="icon">📭</div><p>No appointments yet</p><button class="btn btn-primary btn-sm" style="margin-top:12px" onclick="showPage('services')">Book Now</button></div>`}
+      </div>
+    </div>
+    ${u.role==='provider'?renderProviderPanel():''}`;
+}
+
+function renderProviderPanel(){
+  const myServices=STORE.services.filter(s=>s.providerId===STORE.currentUser.id);
+  return`<div class="card" style="margin-top:20px">
+    <div class="card-header"><span style="font-weight:700">My Services</span><button class="btn btn-primary btn-sm" onclick="openModal('add-svc-modal')">+ Add Service</button></div>
+    <div class="card-body">
+      ${myServices.length?myServices.map(s=>`
+        <div class="appt-row">
+          <div class="appt-icon" style="background:${catColor(s.category)}">${s.icon}</div>
+          <div class="appt-info"><div class="appt-name">${s.name}</div><div class="appt-meta">₹${s.price} · ${s.duration} min · ${s.bookings} bookings · ⭐ ${s.rating}</div></div>
+          <span class="badge badge-cat">${s.category}</span>
+        </div>`).join(''):`<div class="empty" style="padding:20px 0"><p>No services yet. Add your first!</p></div>`}
+    </div>
+  </div>`;
+}
+
+function addService(){
+  if(!STORE.currentUser||STORE.currentUser.role!=='provider'){ toast('Only providers can add services','error'); return; }
+  const name=document.getElementById('ns-name').value.trim();
+  const desc=document.getElementById('ns-desc').value.trim();
+  const cat=document.getElementById('ns-cat').value;
+  const dur=parseInt(document.getElementById('ns-dur').value);
+  const price=parseInt(document.getElementById('ns-price').value);
+  if(!name||!desc||!price){ toast('Please fill all required fields','error'); return; }
+  const icons={healthcare:'🏥',salon:'✂️',consulting:'📊',fitness:'🏃',education:'📚',other:'🎯'};
+  STORE.services.push({id:uid(),name,description:desc,category:cat,duration:dur,price,providerId:STORE.currentUser.id,icon:icons[cat],rating:0,bookings:0});
+  closeModal('add-svc-modal');
+  toast('Service added successfully!');
+  renderDashboard();
+  document.getElementById('ns-name').value='';
+  document.getElementById('ns-desc').value='';
+  document.getElementById('ns-price').value='';
+}
+
+function openProfileModal(){
+  const u=STORE.currentUser;
+  if(!u) return;
+  document.getElementById('profile-body').innerHTML=`
+    <div style="text-align:center;margin-bottom:24px">
+      <div class="profile-avatar" style="margin:0 auto">${u.name.charAt(0).toUpperCase()}</div>
+      <span class="role-tag role-${u.role}">${u.role}</span>
+    </div>
+    <div class="form-group"><label>Full Name</label><input type="text" id="p-name" value="${u.name}"/></div>
+    <div class="form-group"><label>Email</label><input type="email" id="p-email" value="${u.email}" readonly style="background:#f8fafc;color:var(--muted)"/></div>
+    <div class="form-group"><label>Phone</label><input type="tel" id="p-phone" value="${u.phone||''}"/></div>
+    <div style="font-size:13px;color:var(--muted);margin-top:8px">Member since ${fmt(new Date().toISOString())}</div>`;
+}
+
+function saveProfile(){
+  const u=STORE.currentUser;
+  u.name=document.getElementById('p-name').value.trim()||u.name;
+  u.phone=document.getElementById('p-phone').value.trim();
+  const av=document.querySelector('.avatar');
+  if(av) av.textContent=u.name.charAt(0).toUpperCase();
+  closeModal('profile-modal');
+  toast('Profile updated!');
+}
+
+renderServices();
+</script>
+</body>
+</html>
